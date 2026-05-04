@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ChapterLens{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <p class="crumb">Welcome back, {{ current_user.name }}</p>
+    <h1>Dashboard</h1>
+  </div>
+  <a class="btn primary" href="{{ url_for('main.upload') }}">Upload new book</a>
+</div>
+
+<section class="stats-grid">
+  <article class="stat-card">
+    <p class="muted small">Total books</p>
+    <h2>{{ total_books }}</h2>
+  </article>
+  <article class="stat-card">
+    <p class="muted small">Ready books</p>
+    <h2>{{ ready_books }}</h2>
+  </article>
+  <article class="stat-card">
+    <p class="muted small">Processing</p>
+    <h2>{{ processing_books }}</h2>
+  </article>
+  <article class="stat-card">
+    <p class="muted small">Summarized chapters</p>
+    <h2>{{ chapter_count }}</h2>
+  </article>
+</section>
+
+<section class="card dashboard-card">
+  <h3>Quick actions</h3>
+  <div class="dashboard-actions">
+    <a class="btn" href="{{ url_for('main.library') }}">Open personal library</a>
+    <a class="btn" href="{{ url_for('main.upload') }}">Upload another PDF</a>
+  </div>
+</section>
+{% endblock %}

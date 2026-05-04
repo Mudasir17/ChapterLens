@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Upload — PDF Book Summarizer{% endblock %}
+
+{% block body %}
+<section class="card upload-card">
+  <h1>Upload a PDF book</h1>
+  <p class="muted">Drag and drop your file. We extract text, detect chapters, and generate summaries automatically.</p>
+
+  <!-- ADDED: Flash Messages Block (Shows why an upload might have failed) -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}" style="padding: 1rem; margin-bottom: 1rem; border-radius: 4px; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" enctype="multipart/form-data" class="stack" id="upload-form">
+    <label>Book title (optional)
+      <input type="text" name="title" placeholder="Defaults to file name">
+    </label>
+    
+    <!-- REMOVED: Redundant click listener logic from JS below, keep label simple -->
+    <label class="dropzone" id="dropzone">
+      <input type="file" name="pdf" id="pdf-input" accept="application/pdf,.pdf" required hidden>
+      <span id="dropzone-text">Drop PDF here or click to browse</span>
+      <small class="muted">Maximum upload size follows server settings.</small>
+    </label>
+
+    <button type="submit" class="btn primary" id="submit-btn">Start processing</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block body_extra %}
+<script>
+  const dropzone = document.getElementById("dropzone");
+  const input = document.getElementById("pdf-input");
+  const text = document.getElementById("dropzone-text");
+  const form = document.getElementById("upload-form");
+  const btn = document.getElementById("submit-btn");
+
+  const setFile = (file) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      text.textContent = "Please choose a .pdf file.";
+      text.style.color = "red";
+      return;
+    }
+    
+    // Proper way to attach dropped file to hidden input
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    
+    text.textContent = `Selected: ${file.name}`;
+    text.style.color = "inherit";
+  };
+
+  // NATIVE CLICK: Label wrapping an input handles the click automatically. 
+  // We don't need dropzone.addEventListener("click").
+
+  input.addEventListener("change", () => setFile(input.files[0]));
+
+  dropzone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropzone.classList.add("drag-active");
+  });
+
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag-active"));
+
+  dropzone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropzone.classList.remove("drag-active");
+    setFile(e.dataTransfer.files[0]);
+  });
+
+  // ADDED: Prevent double submission
+  form.addEventListener("submit", () => {
+    btn.disabled = true;
+    btn.textContent = "Uploading & Processing...";
+    btn.style.opacity = "0.5";
+  });
+</script>
+{% endblock %}

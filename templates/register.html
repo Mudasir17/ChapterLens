@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Register — PDF Book Summarizer{% endblock %}
+{% block body %}
+<section class="card auth-card">
+  <h1>Create your account</h1>
+  <p class="muted">Upload once, summarize by chapter, read forever.</p>
+  <form method="post" class="stack">
+    <label>Full name<input type="text" name="name" required autocomplete="name"></label>
+    <label>Email<input type="email" name="email" required autocomplete="email"></label>
+    <label>Password (min 6 characters)<input type="password" name="password" required minlength="6" autocomplete="new-password"></label>
+    <button type="submit" class="btn primary">Register</button>
+  </form>
+  <p class="muted small">Already registered? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</section>
+{% endblock %}

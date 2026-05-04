@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Processing {{ book.book_title }} — ChapterLens{% endblock %}
+{% block body %}
+<section class="card narrow processing-card">
+  <h1>Processing your book</h1>
+  <p class="muted">{{ book.book_title }}</p>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+  <p class="muted" id="processing-status">Extracting text and generating chapter summaries...</p>
+  <p class="muted small">This page updates automatically.</p>
+</section>
+{% endblock %}
+{% block body_extra %}
+<script>
+  const statusEl = document.getElementById("processing-status");
+  const progressBar = document.getElementById("progress-bar");
+  let progress = 10;
+  const timer = setInterval(async () => {
+    progress = Math.min(progress + 7, 90);
+    progressBar.style.width = `${progress}%`;
+    const response = await fetch("{{ url_for('main.book_status', book_id=book.book_id) }}");
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.status === "ready") {
+      clearInterval(timer);
+      progressBar.style.width = "100%";
+      statusEl.textContent = `Done. ${data.chapters} chapters summarized. Redirecting...`;
+      window.setTimeout(() => window.location.href = data.book_url, 900);
+      return;
+    }
+    if (data.status === "failed") {
+      clearInterval(timer);
+      progressBar.style.width = "100%";
+      statusEl.textContent = data.error || "Processing failed. Please retry upload.";
+    }
+  }, 1500);
+</script>
+{% endblock %}

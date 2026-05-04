@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ chapter.chapter_title }} — {{ book.book_title }}{% endblock %}
+{% block body %}
+<div class="reader">
+  <p class="crumb">
+    <a href="{{ url_for('main.library') }}">Library</a> ·
+    <a href="{{ url_for('main.book', book_id=book.book_id) }}">{{ book.book_title }}</a>
+  </p>
+  <h1>{{ chapter.chapter_title }}</h1>
+
+  <!-- Summary -->
+  <article class="summary-body" id="summary-text">
+    {{ summary.summary_text | markdown }}
+  </article>
+
+  <!-- Highlight Tool -->
+  <div class="highlight-toolbar" id="highlight-toolbar" style="display:none;">
+    <span class="toolbar-label">Highlight:</span>
+    <button onclick="saveHighlight('yellow')" class="hl-btn yellow">Yellow</button>
+    <button onclick="saveHighlight('green')"  class="hl-btn green">Green</button>
+    <button onclick="saveHighlight('blue')"   class="hl-btn blue">Blue</button>
+    <button onclick="saveHighlight('pink')"   class="hl-btn pink">Pink</button>
+    <button onclick="hideToolbar()"           class="hl-btn cancel">✕</button>
+  </div>
+
+  <!-- Saved Highlights -->
+  {% if highlights %}
+  <section class="highlights-section">
+    <h3>🖊 Your Highlights</h3>
+    <ul class="highlight-list">
+      {% for h in highlights %}
+      <li class="highlight-item hl-{{ h.color }}">
+        <span class="hl-text">"{{ h.highlighted_text }}"</span>
+        <button class="hl-delete" onclick="deleteHighlight({{ h.highlight_id }}, this)" title="Delete">✕</button>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <!-- Vocabulary -->
+  {% if vocab %}
+  <section class="vocab-section">
+    <h3>📖 Key Vocabulary</h3>
+    <div class="vocab-grid">
+      {% for v in vocab %}
+      <div class="vocab-card">
+        <div class="vocab-word">{{ v.word }}</div>
+        <div class="vocab-def">{{ v.definition }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+<style>
+.summary-body { line-height:1.8; font-size:16px; margin:20px 0; }
+.summary-body h2, .summary-body h3 { margin:20px 0 8px; color:#e2e8f0; }
+
+/* Fix bullet point spacing — no gap between bullet and text */
+.summary-body ul { padding-left:20px; margin:8px 0; }
+.summary-body ul li { margin-bottom:4px; display:list-item; }
+.summary-body ul li p { margin:0; display:inline; }
+.summary-body ol { padding-left:20px; margin:8px 0; }
+.summary-body ol li { margin-bottom:4px; }
+.summary-body strong { color:#f1f5f9; }
+
+/* Highlight toolbar */
+.highlight-toolbar {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:#1e2235; border:1px solid #3b4468; border-radius:12px;
+  padding:10px 16px; display:flex; align-items:center; gap:8px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4); z-index:1000;
+}
+.toolbar-label { font-size:13px; color:#94a3b8; margin-right:4px; }
+.hl-btn { padding:5px 12px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; }
+.hl-btn.yellow { background:#fef08a; color:#713f12; }
+.hl-btn.green  { background:#bbf7d0; color:#14532d; }
+.hl-btn.blue   { background:#bfdbfe; color:#1e3a8a; }
+.hl-btn.pink   { background:#fbcfe8; color:#831843; }
+.hl-btn.cancel { background:#374151; color:#d1d5db; }
+
+/* Saved highlights */
+.highlights-section { margin:32px 0; }
+.highlights-section h3 { margin-bottom:12px; font-size:18px; }
+.highlight-list { list-style:none; padding:0; display:flex; flex-direction:column; gap:8px; }
+.highlight-item { padding:10px 14px; border-radius:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.highlight-item.hl-yellow { background:#fef9c3; color:#713f12; }
+.highlight-item.hl-green  { background:#dcfce7; color:#14532d; }
+.highlight-item.hl-blue   { background:#dbeafe; color:#1e3a8a; }
+.highlight-item.hl-pink   { background:#fce7f3; color:#831843; }
+.hl-text { font-size:14px; line-height:1.6; flex:1; }
+.hl-delete { background:none; border:none; cursor:pointer; opacity:0.5; font-size:14px; flex-shrink:0; }
+.hl-delete:hover { opacity:1; }
+
+/* Vocabulary */
+.vocab-section { margin:32px 0; }
+.vocab-section h3 { margin-bottom:14px; font-size:18px; }
+.vocab-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.vocab-card { background:#1a1f35; border:1px solid #2d3555; border-radius:10px; padding:14px; }
+.vocab-word { font-weight:700; font-size:15px; color:#60a5fa; margin-bottom:6px; }
+.vocab-def  { font-size:13px; color:#94a3b8; line-height:1.6; }
+</style>
+
+<script>
+const SUMMARY_ID = {{ summary.summary_id | tojson }};
+let selectedText = "";
+
+document.getElementById("summary-text").addEventListener("mouseup", () => {
+  const sel = window.getSelection();
+  const text = sel ? sel.toString().trim() : "";
+  if (text.length > 5) {
+    selectedText = text;
+    document.getElementById("highlight-toolbar").style.display = "flex";
+  }
+});
+
+function hideToolbar() {
+  document.getElementById("highlight-toolbar").style.display = "none";
+  selectedText = "";
+  window.getSelection()?.removeAllRanges();
+}
+
+async function saveHighlight(color) {
+  if (!selectedText) return;
+  try {
+    const resp = await fetch("/api/highlights", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary_id: SUMMARY_ID, text: selectedText, color }),
+    });
+    if (resp.ok) {
+      hideToolbar();
+      location.reload();
+    } else {
+      alert("Could not save highlight. Please try again.");
+    }
+  } catch (e) {
+    alert("Network error saving highlight.");
+  }
+}
+
+async function deleteHighlight(highlightId, btn) {
+  if (!confirm("Delete this highlight?")) return;
+  try {
+    const resp = await fetch(`/api/highlights/${highlightId}`, { method: "DELETE" });
+    if (resp.ok) {
+      btn.closest("li").remove();
+    }
+  } catch (e) {
+    alert("Network error deleting highlight.");
+  }
+}
+</script>
+{% endblock %}

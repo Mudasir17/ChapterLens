@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ book.book_title }} — PDF Book Summarizer{% endblock %}
+{% block body %}
+<div class="page-head">
+  <div>
+    <p class="crumb"><a href="{{ url_for('main.library') }}">Library</a> /</p>
+    <h1>{{ book.book_title }}</h1>
+    <p class="muted">
+      Uploaded {{ book.upload_date.strftime('%Y-%m-%d %H:%M') }} UTC · {{ chapters|length }} chapters
+      {% if book.category %}
+        · <span class="badge">{{ book.category.category_name }}</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+<!-- Category Edit -->
+<form method="POST" action="{{ url_for('main.update_category', book_id=book.book_id) }}" class="category-form">
+  <label for="category_name"><strong>Category:</strong></label>
+  <input type="text" id="category_name" name="category_name"
+         value="{{ book.category.category_name if book.category else '' }}"
+         placeholder="e.g. Business, Science, Fiction" maxlength="100" />
+  <button type="submit" class="btn-small">Save</button>
+</form>
+
+<!-- Chapter List -->
+<ol class="chapter-list">
+  {% for ch in chapters %}
+  <li>
+    <a href="{{ url_for('main.chapter', book_id=book.book_id, chapter_id=ch.chapter_id) }}">
+      {{ ch.chapter_title }}
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+
+<!-- Recommendations -->
+{% if recommendations %}
+<section class="recommendations">
+  <h2>📚 You might also like</h2>
+  <div class="rec-grid">
+    {% for rec in recommendations %}
+    <div class="rec-card">
+      <div class="rec-title">{{ rec.suggested_title }}</div>
+      {% if rec.suggested_author %}
+        <div class="rec-author muted">by {{ rec.suggested_author }}</div>
+      {% endif %}
+      {% if rec.reason %}
+        <div class="rec-reason small">{{ rec.reason }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<style>
+.category-form { display:flex; align-items:center; gap:8px; margin:12px 0 24px; flex-wrap:wrap; }
+.category-form input { padding:6px 10px; border:1px solid #444; border-radius:6px; background:#1e2235; color:#fff; font-size:14px; width:220px; }
+.btn-small { padding:6px 14px; background:#3b82f6; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; }
+.btn-small:hover { background:#2563eb; }
+.badge { background:#1e3a5f; color:#60a5fa; padding:2px 10px; border-radius:12px; font-size:13px; }
+.recommendations { margin-top:40px; }
+.recommendations h2 { margin-bottom:16px; font-size:20px; }
+.rec-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; }
+.rec-card { background:#1a1f35; border:1px solid #2d3555; border-radius:10px; padding:16px; }
+.rec-title { font-weight:600; font-size:15px; margin-bottom:4px; }
+.rec-author { font-size:13px; margin-bottom:6px; }
+.rec-reason { color:#94a3b8; font-size:13px; line-height:1.5; }
+</style>
+{% endblock %}

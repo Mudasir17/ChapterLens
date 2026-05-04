@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}ChapterLens — AI PDF Book Summarizer{% endblock %}
+{% block body %}
+<section class="hero">
+  <p class="hero-kicker">Built for students, readers, and researchers</p>
+  <h1>Upload any PDF book and get chapter-wise AI summaries.</h1>
+  <p class="muted hero-sub">
+    ChapterLens detects chapters, summarizes each one with NLP, and stores results in your personal library for instant revisit.
+  </p>
+  <div class="hero-actions">
+    <a class="btn" href="{{ url_for('main.upload') }}">Upload PDF</a>
+    <a class="btn primary" href="{{ url_for('auth.register') }}">Create account</a>
+    <a class="btn" href="{{ url_for('auth.login') }}">Log in</a>
+  </div>
+</section>
+
+<section class="feature-grid">
+  <article class="feature-card">
+    <h3>Smart chapter detection</h3>
+    <p class="muted">Automatically identifies chapter boundaries and creates readable sections.</p>
+  </article>
+  <article class="feature-card">
+    <h3>Persistent library</h3>
+    <p class="muted">Summaries are saved in your account. No reprocessing needed on revisit.</p>
+  </article>
+  <article class="feature-card">
+    <h3>Reader-first UX</h3>
+    <p class="muted">Clean interface for chapter navigation and focused summary reading.</p>
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}My library — PDF Book Summarizer{% endblock %}
+{% block body %}
+<div class="page-head">
+  <h1>Personal library</h1>
+  <a class="btn primary" href="{{ url_for('main.upload') }}">Upload PDF</a>
+</div>
+{% if books %}
+<ul class="book-grid">
+  {% for b in books %}
+  <li>
+    <a class="book-card" href="{{ url_for('main.book', book_id=b.book_id) if b.processing_status == 'ready' else url_for('main.processing', book_id=b.book_id) }}">
+      <span class="book-title">{{ b.book_title }}</span>
+      <span class="book-meta">{{ b.upload_date.strftime('%Y-%m-%d') }}</span>
+      <span class="book-pill book-pill-{{ b.processing_status }}">{{ b.processing_status }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="empty">
+  <p>No books yet. Upload a PDF to generate chapter-wise summaries.</p>
+  <a class="btn primary" href="{{ url_for('main.upload') }}">Upload your first PDF</a>
+</div>
+{% endif %}
+{% endblock %}
